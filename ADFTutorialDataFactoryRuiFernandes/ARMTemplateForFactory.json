@@ -1,0 +1,3012 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADFTutorialDataFactoryRuiFernandes"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"AzureBlobStorage2_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage2'"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+		},
+		"AzureTableStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage1'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storagelcuqwsdthhgki.dfs.core.windows.net/"
+		},
+		"NB_COSMOSDB_SQL_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "CosmosDB-ConnectionString"
+		},
+		"NB_DEVDW_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "DW-ConnectionString"
+		},
+		"NB_DevAKV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://NBDEVCfg.vault.azure.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ADFTesteRuiFernandes')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_oit",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "datafactory/input/moviesDB2.csv"
+							},
+							{
+								"name": "Destination",
+								"value": "datafactory/output/"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": false
+						},
+						"inputs": [
+							{
+								"referenceName": "SourceDataset_oit",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DestinationDataset_oit",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "movies",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "movies",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Title",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Title",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "genresgenregenre",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "genresgenregenre",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "YEAR",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "YEAR",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Rating",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Rating",
+											"type": "String",
+											"physicalType": "String"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SourceDataset_fdi",
+								"type": "DatasetReference",
+								"parameters": {
+									"PathFile": "moviesDB2.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureSqlTable1",
+								"type": "DatasetReference",
+								"parameters": {
+									"TableName": "TesteRF",
+									"Schema": "dbo"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-01-19T17:03:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceDataset_oit')]",
+				"[concat(variables('factoryId'), '/datasets/DestinationDataset_oit')]",
+				"[concat(variables('factoryId'), '/datasets/SourceDataset_fdi')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyPipeline_fdi')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_fdi",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "datafactory/input/moviesDB2.csv"
+							},
+							{
+								"name": "Destination",
+								"value": "datafactory/output/TesteRuiF"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings",
+									"skipLineCount": 0
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": false
+						},
+						"inputs": [
+							{
+								"referenceName": "SourceDataset_fdi",
+								"type": "DatasetReference",
+								"parameters": {
+									"PathFile": "moviesDB2.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DestinationDataset_fdi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy_fdi",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureTableSink",
+								"azureTableInsertType": "merge",
+								"writeBatchSize": 10000
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DestinationDataset_fdi",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureTable1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-01-25T15:23:25Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceDataset_fdi')]",
+				"[concat(variables('factoryId'), '/datasets/DestinationDataset_fdi')]",
+				"[concat(variables('factoryId'), '/datasets/AzureTable1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DEV_DataMart')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupDataMartSteps",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Initialise Data Mart Steps",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT [IdLogDetail]\n      ,[IdLogSource]\n      ,[LogSource]\n      ,[LogStepName]\n      ,[LogQuery]\n      ,[LogType]\n      ,[LogMessage]\n      ,[LogExtractionTimestamp]\n      ,[LogEventDateFrom]\n      ,[LogEventDateTo]\n      ,[LogStatus]\n      ,[LogRecordCount]\n      ,[LogStartDt]\n      ,[LogEndDt]\n      ,[AdfPipelineRunId]\nFROM [EnergyDashboard].[MdDataMartLogDetail]\nWHERE 1=1\n\tAND LogStatus = 'Initialised'\nORDER BY [IdLogDetail]",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"SchemaName": "EnergyDashboard",
+									"TableName": "MdDataMartLogDetail"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Initialise Data Mart Steps",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[EnergyDashboard].[uspMdInitDataMartLogDetail]",
+							"storedProcedureParameters": {
+								"AdfPipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LogExtractionTimestamp": {
+									"value": {
+										"value": "@pipeline().parameters.LogExtractionTimestamp",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"StepType": {
+									"value": {
+										"value": "@pipeline().parameters.StepType",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"Source": {
+									"value": {
+										"value": "@pipeline().parameters.Source",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "NB_DEVDW",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "ForEachDataMartStep",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupDataMartSteps",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupDataMartSteps').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "uspMdUpdateDataMartLogDetail",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "DM",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": null,
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "R",
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "uspMdUpdateDataMartLogDetail_End_Success",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "StoredProcedureDataMart",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "D",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": {
+													"value": "@activity('StoredProcedureDataMart').output.firstRow.RecordCount",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "S",
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "uspMdUpdateDataMartLogDetail_End_Failure",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "StoredProcedureDataMart",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "D",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": null,
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "X",
+												"type": "String"
+											},
+											"LogMessage": {
+												"value": {
+													"value": "@activity('StoredProcedureDataMart').error.message",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "StoredProcedureDataMart",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "uspMdUpdateDataMartLogDetail",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderStoredProcedureName": {
+												"value": "@item().LogQuery",
+												"type": "Expression"
+											},
+											"storedProcedureParameters": {
+												"Aggregation": {
+													"type": "String",
+													"value": {
+														"value": "@pipeline().parameters.Aggregation",
+														"type": "Expression"
+													}
+												},
+												"CalendarFrom": {
+													"type": "String",
+													"value": {
+														"value": "@if(equals(coalesce(item().LogEventDateFrom,'1900-01-01'),'1900-01-01'),null,formatDateTime(item().LogEventDateFrom,'yyyy-MM-dd'))",
+														"type": "Expression"
+													}
+												},
+												"CalendarTo": {
+													"type": "String",
+													"value": {
+														"value": "@if(equals(coalesce(item().LogEventDateTo,'1900-01-01'),'1900-01-01'),null,formatDateTime(item().LogEventDateTo,'yyyy-MM-dd'))",
+														"type": "Expression"
+													}
+												},
+												"LogExtractionTimestamp": {
+													"type": "String",
+													"value": {
+														"value": "@item().LogExtractionTimestamp",
+														"type": "Expression"
+													}
+												}
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "NB_DEV_DW_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"SchemaName": "EnergyDashboard",
+												"TableName": "MdDataMartLogDetail"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Sp_Fix_FctSGEHour",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEachDataMartStep",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[EnergyDashboard].[Fix_FctSGEHour]"
+						},
+						"linkedServiceName": {
+							"referenceName": "NB_DEVDW",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Sp_Fix_FctSGEDay",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Sp_Fix_FctSGEHour",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[EnergyDashboard].[Fix_FctSGEDay]"
+						},
+						"linkedServiceName": {
+							"referenceName": "NB_DEVDW",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Source": {
+						"type": "string",
+						"defaultValue": "CosmosDB"
+					},
+					"StepType": {
+						"type": "string",
+						"defaultValue": "ALL"
+					},
+					"LogExtractionTimestamp": {
+						"type": "string"
+					},
+					"Aggregation": {
+						"type": "string",
+						"defaultValue": "Delta"
+					}
+				},
+				"folder": {
+					"name": "DEV"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_Datasets')]",
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DEV_Delete_Old_Data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "delete old data",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[EnergyDashboard].[uspDeleteOldData]"
+						},
+						"linkedServiceName": {
+							"referenceName": "NB_DEVDW",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DEV"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DEV_Extraction_CosmosDB')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupExtractions",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Initialise Extractions",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT [IdLogDetail]\n      ,[IdLogSource]\n      ,[LogSource]\n      ,[LogStepName]\n      ,[LogTargetTableName]\n      ,[LogQuery]\n      ,[LogType]\n      ,[LogMessage]\n      ,[LogExtractionTimestamp]\n      ,[LogEventDateFrom]\n      ,[LogEventDateTo]\n      ,[LogStatus]\n      ,[LogRecordCount]\n      ,[LogStartDt]\n      ,[LogEndDt]\n      ,[AdfPipelineRunId]\n  FROM [EnergyDashboard].[MdSourceLogDetail]\nWHERE 1=1\n\tAND LogStatus = 'Initialised'\nORDER BY [IdLogDetail]",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"SchemaName": "EnergyDashboard",
+									"TableName": "MdSourceLogDetail"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Initialise Extractions",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[EnergyDashboard].[uspMdInitSourceLogDetail]",
+							"storedProcedureParameters": {
+								"AdfPipelineRunId": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LogEventDateFrom": {
+									"value": {
+										"value": "@pipeline().parameters.LogEventDateFrom",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LogEventDateTo": {
+									"value": {
+										"value": "@pipeline().parameters.LogEventDateTo",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LogExtractionTimestamp": {
+									"value": {
+										"value": "@formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LogType": {
+									"value": {
+										"value": "@pipeline().parameters.LogType",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"Source": {
+									"value": {
+										"value": "@pipeline().parameters.Source",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "NB_DEVDW",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "ForEachExtraction",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupExtractions",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupExtractions').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "uspMdUpdateSourceLogDetail",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "S",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": null,
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "R",
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Copy data",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "uspMdUpdateSourceLogDetail",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "CosmosDbSqlApiSource",
+											"query": {
+												"value": "@item().LogQuery",
+												"type": "Expression"
+											},
+											"preferredRegions": [],
+											"detectDatetime": true
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"preCopyScript": {
+												"value": "@{concat('TRUNCATE TABLE energyDashboard.',item().LogTargetTableName)}",
+												"type": "Expression"
+											},
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "NB_CosmosDB_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"CollectionName": {
+													"value": "@item().LogStepName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "NB_DEV_DW_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"SchemaName": "EnergyDashboard",
+												"TableName": {
+													"value": "@item().LogTargetTableName",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "uspMdUpdateSourceLogDetail_End_Succcess",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "S",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": {
+													"value": "@activity('Copy Data').output.rowsCopied",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "S",
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "uspMdUpdateSourceLogDetail_End_Failure",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+										"storedProcedureParameters": {
+											"IdLogDetail": {
+												"value": {
+													"value": "@item().IdLogDetail",
+													"type": "Expression"
+												},
+												"type": "Int32"
+											},
+											"Layer": {
+												"value": "S",
+												"type": "String"
+											},
+											"RecordCount": {
+												"value": null,
+												"type": "Int32"
+											},
+											"Status": {
+												"value": "X",
+												"type": "String"
+											},
+											"LogMessage": {
+												"value": {
+													"value": "@activity('Copy data').error.message",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Source": {
+						"type": "string",
+						"defaultValue": "CosmosDB"
+					},
+					"LogType": {
+						"type": "string",
+						"defaultValue": "LogDate"
+					},
+					"LogEventDateFrom": {
+						"type": "string"
+					},
+					"LogEventDateTo": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DEV"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_Datasets')]",
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]",
+				"[concat(variables('factoryId'), '/datasets/NB_CosmosDB_Datasets')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DEV_Master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DEV_Extraction_CosmosDB",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "DEV_Delete_Old_Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DEV_Extraction_CosmosDB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "DEV_DataMart",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "DEV_Extraction_CosmosDB",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DEV_DataMart",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"Aggregation": "Delta"
+							}
+						}
+					},
+					{
+						"name": "DEV_Delete_Old_Data",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DEV_Delete_Old_Data",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DEV"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:02Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/DEV_Extraction_CosmosDB')]",
+				"[concat(variables('factoryId'), '/pipelines/DEV_DataMart')]",
+				"[concat(variables('factoryId'), '/pipelines/DEV_Delete_Old_Data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IOT_Insert_FCT')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT DISTINCT ID_Key, Sensor_type \r\nfrom [STG].[ALL]\r\nwhere ID_Key = '@{pipeline().parameters.ID_Key}' and Sensor_type = @{pipeline().parameters.Sensor_Type}\r\n\r\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_SGA_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "STG",
+									"TableName": "ALL"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value",
+								"type": "Expression"
+							},
+							"batchCount": 16,
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderStoredProcedureName": "[[IOT].[Insert_FCT]",
+											"storedProcedureParameters": {
+												"ID_KEY": {
+													"type": "String",
+													"value": {
+														"value": "@item().ID_KEY",
+														"type": "Expression"
+													}
+												},
+												"SENSOR_TYPE": {
+													"type": "Int32",
+													"value": {
+														"value": "@item().Sensor_Type",
+														"type": "Expression"
+													}
+												}
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"preCopyScript": {
+												"value": "delete from [IOT].[FCT_IOT]\nWHERE ID_KEY = '@{item().ID_Key}' \nAND ID_SENSOR_TYPE = @{item().Sensor_Type}",
+												"type": "Expression"
+											},
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "ID_ASSET"
+													},
+													"sink": {
+														"name": "ID_ASSET",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "ID_Key"
+													},
+													"sink": {
+														"name": "ID_KEY",
+														"type": "String",
+														"physicalType": "varchar"
+													}
+												},
+												{
+													"source": {
+														"name": "ID_COMPANY"
+													},
+													"sink": {
+														"name": "ID_COMPANY",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "CD_CalendarEvent"
+													},
+													"sink": {
+														"name": "CD_CalendarEvent",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "CD_TimeEvent"
+													},
+													"sink": {
+														"name": "CD_TimeEvent",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "D_EventDate"
+													},
+													"sink": {
+														"name": "D_EventDate",
+														"type": "DateTime",
+														"physicalType": "datetime"
+													}
+												},
+												{
+													"source": {
+														"name": "Sensor_Type"
+													},
+													"sink": {
+														"name": "ID_SENSOR_TYPE",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "ID_AGGREGATION"
+													},
+													"sink": {
+														"name": "ID_AGREGATION",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "ID_KPI_NAME"
+													},
+													"sink": {
+														"name": "ID_KPI_NAME",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "ID_KPI_TYPE"
+													},
+													"sink": {
+														"name": "ID_KPI_TYPE",
+														"type": "Int32",
+														"physicalType": "int"
+													}
+												},
+												{
+													"source": {
+														"name": "VL_KPI"
+													},
+													"sink": {
+														"name": "VL_KPI",
+														"type": "Decimal",
+														"physicalType": "decimal",
+														"scale": 15,
+														"precision": 30
+													}
+												},
+												{
+													"source": {
+														"name": "LOG_ExtractionTimestamp"
+													},
+													"sink": {
+														"name": "LOG_ExtractionTimestamp",
+														"type": "DateTime",
+														"physicalType": "datetime"
+													}
+												}
+											],
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "NB_DEV_DW_SGA_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"Schema": "STG",
+												"TableName": "ALL"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "NB_DEV_DW_SGA_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"Schema": "IOT",
+												"TableName": "FCT_IOT"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Sensor_Type": {
+						"type": "int"
+					},
+					"Id_Key": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DEV_SGA"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_SGA_Datasets')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/STG_Company')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT distinct CompanyId from STG.MdSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_SGA_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "STG",
+									"TableName": "MdSource"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Execute Pipeline1",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "STG_SourceTableName",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"CompanyId": {
+												"value": "@item().CompanyId",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DEV_SGA"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:03Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_SGA_Datasets')]",
+				"[concat(variables('factoryId'), '/pipelines/STG_SourceTableName')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/STG_Invoke_SP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[STG].[usp_Init_IOT_Extraction]",
+								"storedProcedureParameters": {
+									"CompanyId": {
+										"type": "String",
+										"value": {
+											"value": "@pipeline().parameters.CompanyId",
+											"type": "Expression"
+										}
+									},
+									"EndDate": {
+										"type": "DateTime",
+										"value": null
+									},
+									"LogMinutes": {
+										"type": "Int32",
+										"value": "1440"
+									},
+									"Table": {
+										"type": "String",
+										"value": {
+											"value": "@pipeline().parameters.SourceTableName",
+											"type": "Expression"
+										}
+									},
+									"TimeWindow": {
+										"type": "Int32",
+										"value": {
+											"value": "@pipeline().parameters.NR_MINUTES",
+											"type": "Expression"
+										}
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_SGA_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "STG",
+									"TableName": "MdSource"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 6,
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "CosmosDbSqlApiSource",
+											"additionalColumns": [
+												{
+													"name": "ID_KEY2",
+													"value": {
+														"value": "@item().ID_KEY",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "ID_COMPANY2",
+													"value": {
+														"value": "@item().ID_COMPANY",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "Time_Window2",
+													"value": {
+														"value": "@item().Time_Window",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "LOG_ExtractionTimestamp2",
+													"value": {
+														"value": "@item().LOG_ExtractionTimestamp",
+														"type": "Expression"
+													}
+												}
+											],
+											"query": {
+												"value": "@concat(item().SourceQuery,' ',item().SourceFilter)",
+												"type": "Expression"
+											},
+											"preferredRegions": [],
+											"detectDatetime": true
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"preCopyScript": {
+												"value": "delete from [STG].[ALL]\nWHERE ID_Key = '@{item().ID_Key}' \nAND Sensor_Type = '@{item().Sensor_Type}'",
+												"type": "Expression"
+											},
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"path": "$['ID_Device']"
+													},
+													"sink": {
+														"name": "ID_Device",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['Event_Date']"
+													},
+													"sink": {
+														"name": "Event_Date",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"path": "$['Sensor_Type']"
+													},
+													"sink": {
+														"name": "Sensor_Type",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column1']"
+													},
+													"sink": {
+														"name": "column1",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column2']"
+													},
+													"sink": {
+														"name": "column2",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column3']"
+													},
+													"sink": {
+														"name": "column3",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column4']"
+													},
+													"sink": {
+														"name": "column4",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column5']"
+													},
+													"sink": {
+														"name": "column5",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column6']"
+													},
+													"sink": {
+														"name": "column6",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column7']"
+													},
+													"sink": {
+														"name": "column7",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column8']"
+													},
+													"sink": {
+														"name": "column8",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column9']"
+													},
+													"sink": {
+														"name": "column9",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column10']"
+													},
+													"sink": {
+														"name": "column10",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column11']"
+													},
+													"sink": {
+														"name": "column11",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column12']"
+													},
+													"sink": {
+														"name": "column12",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column13']"
+													},
+													"sink": {
+														"name": "column13",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column14']"
+													},
+													"sink": {
+														"name": "column14",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column15']"
+													},
+													"sink": {
+														"name": "column15",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column16']"
+													},
+													"sink": {
+														"name": "column16",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column17']"
+													},
+													"sink": {
+														"name": "column17",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column18']"
+													},
+													"sink": {
+														"name": "column18",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column19']"
+													},
+													"sink": {
+														"name": "column19",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column20']"
+													},
+													"sink": {
+														"name": "column20",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column21']"
+													},
+													"sink": {
+														"name": "column21",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column22']"
+													},
+													"sink": {
+														"name": "column22",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column23']"
+													},
+													"sink": {
+														"name": "column23",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column24']"
+													},
+													"sink": {
+														"name": "column24",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column25']"
+													},
+													"sink": {
+														"name": "column25",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column26']"
+													},
+													"sink": {
+														"name": "column26",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column27']"
+													},
+													"sink": {
+														"name": "column27",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column28']"
+													},
+													"sink": {
+														"name": "column28",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column29']"
+													},
+													"sink": {
+														"name": "column29",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column30']"
+													},
+													"sink": {
+														"name": "column30",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column31']"
+													},
+													"sink": {
+														"name": "column31",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column32']"
+													},
+													"sink": {
+														"name": "column32",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column33']"
+													},
+													"sink": {
+														"name": "column33",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column34']"
+													},
+													"sink": {
+														"name": "column34",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column35']"
+													},
+													"sink": {
+														"name": "column35",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column36']"
+													},
+													"sink": {
+														"name": "column36",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column37']"
+													},
+													"sink": {
+														"name": "column37",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column38']"
+													},
+													"sink": {
+														"name": "column38",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column39']"
+													},
+													"sink": {
+														"name": "column39",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['column40']"
+													},
+													"sink": {
+														"name": "column40",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['ID_KEY2']"
+													},
+													"sink": {
+														"name": "ID_Key",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['ID_COMPANY2']"
+													},
+													"sink": {
+														"name": "ID_Company",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['Time_Window2']"
+													},
+													"sink": {
+														"name": "Time_Window",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"path": "$['LOG_ExtractionTimestamp2']"
+													},
+													"sink": {
+														"name": "LOG_ExtractionTimestamp"
+													}
+												}
+											],
+											"collectionReference": ""
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "NB_CosmosDB_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"CollectionName": {
+													"value": "@item().SourceTableName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "NB_DEV_DW_SGA_Datasets",
+											"type": "DatasetReference",
+											"parameters": {
+												"Schema": "STG",
+												"TableName": "ALL"
+											}
+										}
+									]
+								},
+								{
+									"name": "Execute Pipeline1",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Insert_New_Assets",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "IOT_Insert_FCT",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"Sensor_Type": {
+												"value": "@item().Sensor_Type",
+												"type": "Expression"
+											},
+											"Id_Key": {
+												"value": "@item().ID_Key",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Insert_New_Assets",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[IOT].[INSERT_NEW_ASSET]"
+									},
+									"linkedServiceName": {
+										"referenceName": "NB_DEVDW",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"CompanyId": {
+						"type": "string"
+					},
+					"SourceTableName": {
+						"type": "string"
+					},
+					"NR_MINUTES": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DEV_SGA"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:02Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_SGA_Datasets')]",
+				"[concat(variables('factoryId'), '/datasets/NB_CosmosDB_Datasets')]",
+				"[concat(variables('factoryId'), '/pipelines/IOT_Insert_FCT')]",
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/STG_SourceTableName')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT distinct SourceTableName,  min(NR_MINUTES) as NR_MINUTES  FROM STG.MdSource as md\nleft join [IOT].[DIM_SENSOR_TYPE] as s\non md.SourceTableName = s.CD_SENSOR_TYPE\nleft join [IOT].[DIM_SENSOR_TYPE_AGGREGATION] sta\non s.ID_SENSOR_TYPE = sta.ID_SENSOR_TYPE\nWHERE md.CompanyId = '@{pipeline().parameters.CompanyId}'\nGROUP BY SourceTableName\n\n\n\n\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "NB_DEV_DW_SGA_Datasets",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "STG",
+									"TableName": "MdSource"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Execute Pipeline1",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "STG_Invoke_SP",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"CompanyId": {
+												"value": "@pipeline().parameters.CompanyId",
+												"type": "Expression"
+											},
+											"SourceTableName": {
+												"value": "@item().SourceTableName",
+												"type": "Expression"
+											},
+											"NR_MINUTES": {
+												"value": "@item().NR_MINUTES",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"CompanyId": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"CompanyId": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "DEV_SGA"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-14T13:27:02Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NB_DEV_DW_SGA_Datasets')]",
+				"[concat(variables('factoryId'), '/pipelines/STG_Invoke_SP')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string"
+					},
+					"Schema": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().Schema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureTableStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureTable",
+				"schema": [],
+				"typeProperties": {
+					"tableName": "TableRuiF"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureTableStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DestinationDataset_fdi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "TesteRuiF",
+						"folderPath": "output",
+						"fileSystem": "datafactory"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DestinationDataset_oit')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output",
+						"container": "datafactory"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_CosmosDB_Datasets')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "NB_COSMOSDB_SQL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"CollectionName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "PROD"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": {
+						"value": "@dataset().CollectionName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_COSMOSDB_SQL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_DEV_DW_Datasets')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string",
+						"defaultValue": "EnergyDashboard"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DEV"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_DEV_DW_SGA_Datasets')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Schema": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().Schema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_DEVDW')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceDataset_fdi')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"PathFile": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().PathFile",
+							"type": "Expression"
+						},
+						"folderPath": "input",
+						"container": "datafactory"
+					},
+					"columnDelimiter": ",",
+					"rowDelimiter": "\n",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "movies",
+						"type": "String"
+					},
+					{
+						"name": "Title",
+						"type": "String"
+					},
+					{
+						"name": "genresgenregenre",
+						"type": "String"
+					},
+					{
+						"name": "YEAR",
+						"type": "String"
+					},
+					{
+						"name": "Rating",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceDataset_oit')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "moviesDB2.csv",
+						"folderPath": "input",
+						"container": "datafactory"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage2')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage2_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureTableStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureTableStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureTableStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_COSMOSDB_SQL')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "NB_DevAKV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "[parameters('NB_COSMOSDB_SQL_properties_typeProperties_connectionString_secretName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_DevAKV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_DEVDW')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "NB_DevAKV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "[parameters('NB_DEVDW_properties_typeProperties_connectionString_secretName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/NB_DevAKV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NB_DevAKV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('NB_DevAKV_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Master_run')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "DEV_Master",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2022-06-21T15:49:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/DEV_Master')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SourceDataset_fdi",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SourceDataset_fdi",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "sort1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          movies as string,",
+						"          Title as string,",
+						"          genresgenregenre as string,",
+						"          YEAR as string,",
+						"          Rating as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 sort(asc(YEAR, true)) ~> sort1",
+						"sort1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          movies as string,",
+						"          Title as string,",
+						"          genresgenregenre as string,",
+						"          YEAR as string,",
+						"          Rating as string",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceDataset_fdi')]"
+			]
+		}
+	]
+}
