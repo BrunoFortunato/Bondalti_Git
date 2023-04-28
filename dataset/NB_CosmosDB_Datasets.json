@@ -1,0 +1,27 @@
+{
+	"name": "NB_CosmosDB_Datasets",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "NB_COSMOSDB_SQL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"CollectionName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "PROD"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {},
+		"typeProperties": {
+			"collectionName": {
+				"value": "@dataset().CollectionName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

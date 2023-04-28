@@ -1,0 +1,11 @@
+{
+	"name": "NB_DevAKV",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://NBDEVCfg.vault.azure.net/"
+		}
+	}
+}

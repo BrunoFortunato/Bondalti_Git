@@ -1,0 +1,680 @@
+{
+	"name": "STG_Invoke_SP",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[STG].[usp_Init_IOT_Extraction]",
+						"storedProcedureParameters": {
+							"CompanyId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.CompanyId",
+									"type": "Expression"
+								}
+							},
+							"EndDate": {
+								"type": "DateTime",
+								"value": null
+							},
+							"LogMinutes": {
+								"type": "Int32",
+								"value": "1440"
+							},
+							"Table": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.SourceTableName",
+									"type": "Expression"
+								}
+							},
+							"TimeWindow": {
+								"type": "Int32",
+								"value": {
+									"value": "@pipeline().parameters.NR_MINUTES",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "NB_DEV_DW_SGA_Datasets",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "STG",
+							"TableName": "MdSource"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 6,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "CosmosDbSqlApiSource",
+									"additionalColumns": [
+										{
+											"name": "ID_KEY2",
+											"value": {
+												"value": "@item().ID_KEY",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ID_COMPANY2",
+											"value": {
+												"value": "@item().ID_COMPANY",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "Time_Window2",
+											"value": {
+												"value": "@item().Time_Window",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "LOG_ExtractionTimestamp2",
+											"value": {
+												"value": "@item().LOG_ExtractionTimestamp",
+												"type": "Expression"
+											}
+										}
+									],
+									"query": {
+										"value": "@concat(item().SourceQuery,' ',item().SourceFilter)",
+										"type": "Expression"
+									},
+									"preferredRegions": [],
+									"detectDatetime": true
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "delete from [STG].[ALL]\nWHERE ID_Key = '@{item().ID_Key}' \nAND Sensor_Type = '@{item().Sensor_Type}'",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['ID_Device']"
+											},
+											"sink": {
+												"name": "ID_Device",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Event_Date']"
+											},
+											"sink": {
+												"name": "Event_Date",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Sensor_Type']"
+											},
+											"sink": {
+												"name": "Sensor_Type",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column1']"
+											},
+											"sink": {
+												"name": "column1",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column2']"
+											},
+											"sink": {
+												"name": "column2",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column3']"
+											},
+											"sink": {
+												"name": "column3",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column4']"
+											},
+											"sink": {
+												"name": "column4",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column5']"
+											},
+											"sink": {
+												"name": "column5",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column6']"
+											},
+											"sink": {
+												"name": "column6",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column7']"
+											},
+											"sink": {
+												"name": "column7",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column8']"
+											},
+											"sink": {
+												"name": "column8",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column9']"
+											},
+											"sink": {
+												"name": "column9",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column10']"
+											},
+											"sink": {
+												"name": "column10",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column11']"
+											},
+											"sink": {
+												"name": "column11",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column12']"
+											},
+											"sink": {
+												"name": "column12",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column13']"
+											},
+											"sink": {
+												"name": "column13",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column14']"
+											},
+											"sink": {
+												"name": "column14",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column15']"
+											},
+											"sink": {
+												"name": "column15",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column16']"
+											},
+											"sink": {
+												"name": "column16",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column17']"
+											},
+											"sink": {
+												"name": "column17",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column18']"
+											},
+											"sink": {
+												"name": "column18",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column19']"
+											},
+											"sink": {
+												"name": "column19",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column20']"
+											},
+											"sink": {
+												"name": "column20",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column21']"
+											},
+											"sink": {
+												"name": "column21",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column22']"
+											},
+											"sink": {
+												"name": "column22",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column23']"
+											},
+											"sink": {
+												"name": "column23",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column24']"
+											},
+											"sink": {
+												"name": "column24",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column25']"
+											},
+											"sink": {
+												"name": "column25",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column26']"
+											},
+											"sink": {
+												"name": "column26",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column27']"
+											},
+											"sink": {
+												"name": "column27",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column28']"
+											},
+											"sink": {
+												"name": "column28",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column29']"
+											},
+											"sink": {
+												"name": "column29",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column30']"
+											},
+											"sink": {
+												"name": "column30",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column31']"
+											},
+											"sink": {
+												"name": "column31",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column32']"
+											},
+											"sink": {
+												"name": "column32",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column33']"
+											},
+											"sink": {
+												"name": "column33",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column34']"
+											},
+											"sink": {
+												"name": "column34",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column35']"
+											},
+											"sink": {
+												"name": "column35",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column36']"
+											},
+											"sink": {
+												"name": "column36",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column37']"
+											},
+											"sink": {
+												"name": "column37",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column38']"
+											},
+											"sink": {
+												"name": "column38",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column39']"
+											},
+											"sink": {
+												"name": "column39",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['column40']"
+											},
+											"sink": {
+												"name": "column40",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ID_KEY2']"
+											},
+											"sink": {
+												"name": "ID_Key",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ID_COMPANY2']"
+											},
+											"sink": {
+												"name": "ID_Company",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Time_Window2']"
+											},
+											"sink": {
+												"name": "Time_Window",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"path": "$['LOG_ExtractionTimestamp2']"
+											},
+											"sink": {
+												"name": "LOG_ExtractionTimestamp"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "NB_CosmosDB_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"CollectionName": {
+											"value": "@item().SourceTableName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "NB_DEV_DW_SGA_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": "STG",
+										"TableName": "ALL"
+									}
+								}
+							]
+						},
+						{
+							"name": "Execute Pipeline1",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Insert_New_Assets",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "IOT_Insert_FCT",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"Sensor_Type": {
+										"value": "@item().Sensor_Type",
+										"type": "Expression"
+									},
+									"Id_Key": {
+										"value": "@item().ID_Key",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Insert_New_Assets",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[IOT].[INSERT_NEW_ASSET]"
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"CompanyId": {
+				"type": "string"
+			},
+			"SourceTableName": {
+				"type": "string"
+			},
+			"NR_MINUTES": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DEV_SGA"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

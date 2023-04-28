@@ -1,0 +1,409 @@
+{
+	"name": "DEV_DataMart",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupDataMartSteps",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Initialise Data Mart Steps",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT [IdLogDetail]\n      ,[IdLogSource]\n      ,[LogSource]\n      ,[LogStepName]\n      ,[LogQuery]\n      ,[LogType]\n      ,[LogMessage]\n      ,[LogExtractionTimestamp]\n      ,[LogEventDateFrom]\n      ,[LogEventDateTo]\n      ,[LogStatus]\n      ,[LogRecordCount]\n      ,[LogStartDt]\n      ,[LogEndDt]\n      ,[AdfPipelineRunId]\nFROM [EnergyDashboard].[MdDataMartLogDetail]\nWHERE 1=1\n\tAND LogStatus = 'Initialised'\nORDER BY [IdLogDetail]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "NB_DEV_DW_Datasets",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "EnergyDashboard",
+							"TableName": "MdDataMartLogDetail"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Initialise Data Mart Steps",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[EnergyDashboard].[uspMdInitDataMartLogDetail]",
+					"storedProcedureParameters": {
+						"AdfPipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"LogExtractionTimestamp": {
+							"value": {
+								"value": "@pipeline().parameters.LogExtractionTimestamp",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"StepType": {
+							"value": {
+								"value": "@pipeline().parameters.StepType",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Source": {
+							"value": {
+								"value": "@pipeline().parameters.Source",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ForEachDataMartStep",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupDataMartSteps",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupDataMartSteps').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "uspMdUpdateDataMartLogDetail",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "DM",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": null,
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "R",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "uspMdUpdateDataMartLogDetail_End_Success",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "StoredProcedureDataMart",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "D",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": {
+											"value": "@activity('StoredProcedureDataMart').output.firstRow.RecordCount",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "S",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "uspMdUpdateDataMartLogDetail_End_Failure",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "StoredProcedureDataMart",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateDataMartLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "D",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": null,
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "X",
+										"type": "String"
+									},
+									"LogMessage": {
+										"value": {
+											"value": "@activity('StoredProcedureDataMart').error.message",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "StoredProcedureDataMart",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "uspMdUpdateDataMartLogDetail",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderStoredProcedureName": {
+										"value": "@item().LogQuery",
+										"type": "Expression"
+									},
+									"storedProcedureParameters": {
+										"Aggregation": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.Aggregation",
+												"type": "Expression"
+											}
+										},
+										"CalendarFrom": {
+											"type": "String",
+											"value": {
+												"value": "@if(equals(coalesce(item().LogEventDateFrom,'1900-01-01'),'1900-01-01'),null,formatDateTime(item().LogEventDateFrom,'yyyy-MM-dd'))",
+												"type": "Expression"
+											}
+										},
+										"CalendarTo": {
+											"type": "String",
+											"value": {
+												"value": "@if(equals(coalesce(item().LogEventDateTo,'1900-01-01'),'1900-01-01'),null,formatDateTime(item().LogEventDateTo,'yyyy-MM-dd'))",
+												"type": "Expression"
+											}
+										},
+										"LogExtractionTimestamp": {
+											"type": "String",
+											"value": {
+												"value": "@item().LogExtractionTimestamp",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "NB_DEV_DW_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "EnergyDashboard",
+										"TableName": "MdDataMartLogDetail"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Sp_Fix_FctSGEHour",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEachDataMartStep",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[EnergyDashboard].[Fix_FctSGEHour]"
+				},
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Sp_Fix_FctSGEDay",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Sp_Fix_FctSGEHour",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[EnergyDashboard].[Fix_FctSGEDay]"
+				},
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"Source": {
+				"type": "string",
+				"defaultValue": "CosmosDB"
+			},
+			"StepType": {
+				"type": "string",
+				"defaultValue": "ALL"
+			},
+			"LogExtractionTimestamp": {
+				"type": "string"
+			},
+			"Aggregation": {
+				"type": "string",
+				"defaultValue": "Delta"
+			}
+		},
+		"folder": {
+			"name": "DEV"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,276 @@
+{
+	"name": "IOT_Insert_FCT",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT ID_Key, Sensor_type \r\nfrom [STG].[ALL]\r\nwhere ID_Key = '@{pipeline().parameters.ID_Key}' and Sensor_type = @{pipeline().parameters.Sensor_Type}\r\n\r\n",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "NB_DEV_DW_SGA_Datasets",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "STG",
+							"TableName": "ALL"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 16,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderStoredProcedureName": "[IOT].[Insert_FCT]",
+									"storedProcedureParameters": {
+										"ID_KEY": {
+											"type": "String",
+											"value": {
+												"value": "@item().ID_KEY",
+												"type": "Expression"
+											}
+										},
+										"SENSOR_TYPE": {
+											"type": "Int32",
+											"value": {
+												"value": "@item().Sensor_Type",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "delete from [IOT].[FCT_IOT]\nWHERE ID_KEY = '@{item().ID_Key}' \nAND ID_SENSOR_TYPE = @{item().Sensor_Type}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "ID_ASSET"
+											},
+											"sink": {
+												"name": "ID_ASSET",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "ID_Key"
+											},
+											"sink": {
+												"name": "ID_KEY",
+												"type": "String",
+												"physicalType": "varchar"
+											}
+										},
+										{
+											"source": {
+												"name": "ID_COMPANY"
+											},
+											"sink": {
+												"name": "ID_COMPANY",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "CD_CalendarEvent"
+											},
+											"sink": {
+												"name": "CD_CalendarEvent",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "CD_TimeEvent"
+											},
+											"sink": {
+												"name": "CD_TimeEvent",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "D_EventDate"
+											},
+											"sink": {
+												"name": "D_EventDate",
+												"type": "DateTime",
+												"physicalType": "datetime"
+											}
+										},
+										{
+											"source": {
+												"name": "Sensor_Type"
+											},
+											"sink": {
+												"name": "ID_SENSOR_TYPE",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "ID_AGGREGATION"
+											},
+											"sink": {
+												"name": "ID_AGREGATION",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "ID_KPI_NAME"
+											},
+											"sink": {
+												"name": "ID_KPI_NAME",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "ID_KPI_TYPE"
+											},
+											"sink": {
+												"name": "ID_KPI_TYPE",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "VL_KPI"
+											},
+											"sink": {
+												"name": "VL_KPI",
+												"type": "Decimal",
+												"physicalType": "decimal",
+												"scale": 15,
+												"precision": 30
+											}
+										},
+										{
+											"source": {
+												"name": "LOG_ExtractionTimestamp"
+											},
+											"sink": {
+												"name": "LOG_ExtractionTimestamp",
+												"type": "DateTime",
+												"physicalType": "datetime"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "NB_DEV_DW_SGA_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": "STG",
+										"TableName": "ALL"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "NB_DEV_DW_SGA_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schema": "IOT",
+										"TableName": "FCT_IOT"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Sensor_Type": {
+				"type": "int"
+			},
+			"Id_Key": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DEV_SGA"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

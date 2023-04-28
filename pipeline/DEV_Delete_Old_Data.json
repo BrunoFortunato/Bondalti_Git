@@ -1,0 +1,33 @@
+{
+	"name": "DEV_Delete_Old_Data",
+	"properties": {
+		"activities": [
+			{
+				"name": "delete old data",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[EnergyDashboard].[uspDeleteOldData]"
+				},
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "DEV"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,9 @@
+{
+	"name": "ADFTutorialDataFactoryRuiFernandes",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "77f47f68-03ed-4df2-ae5a-a5e3ffd27f47",
+		"tenantId": "ae271a07-818c-499d-b679-534a90319a44"
+	}
+}

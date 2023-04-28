@@ -1,0 +1,69 @@
+{
+	"name": "DEV_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "DEV_Extraction_CosmosDB",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DEV_Delete_Old_Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DEV_Extraction_CosmosDB",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "DEV_DataMart",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DEV_Extraction_CosmosDB",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DEV_DataMart",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"Aggregation": "Delta"
+					}
+				}
+			},
+			{
+				"name": "DEV_Delete_Old_Data",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DEV_Delete_Old_Data",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "DEV"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

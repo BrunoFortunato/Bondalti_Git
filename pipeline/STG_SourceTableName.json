@@ -1,0 +1,105 @@
+{
+	"name": "STG_SourceTableName",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT distinct SourceTableName,  min(NR_MINUTES) as NR_MINUTES  FROM STG.MdSource as md\nleft join [IOT].[DIM_SENSOR_TYPE] as s\non md.SourceTableName = s.CD_SENSOR_TYPE\nleft join [IOT].[DIM_SENSOR_TYPE_AGGREGATION] sta\non s.ID_SENSOR_TYPE = sta.ID_SENSOR_TYPE\nWHERE md.CompanyId = '@{pipeline().parameters.CompanyId}'\nGROUP BY SourceTableName\n\n\n\n\n",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "NB_DEV_DW_SGA_Datasets",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schema": "STG",
+							"TableName": "MdSource"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Execute Pipeline1",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "STG_Invoke_SP",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"CompanyId": {
+										"value": "@pipeline().parameters.CompanyId",
+										"type": "Expression"
+									},
+									"SourceTableName": {
+										"value": "@item().SourceTableName",
+										"type": "Expression"
+									},
+									"NR_MINUTES": {
+										"value": "@item().NR_MINUTES",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"CompanyId": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"CompanyId": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "DEV_SGA"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

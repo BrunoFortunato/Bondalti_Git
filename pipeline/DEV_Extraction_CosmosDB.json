@@ -1,0 +1,365 @@
+{
+	"name": "DEV_Extraction_CosmosDB",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupExtractions",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Initialise Extractions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT [IdLogDetail]\n      ,[IdLogSource]\n      ,[LogSource]\n      ,[LogStepName]\n      ,[LogTargetTableName]\n      ,[LogQuery]\n      ,[LogType]\n      ,[LogMessage]\n      ,[LogExtractionTimestamp]\n      ,[LogEventDateFrom]\n      ,[LogEventDateTo]\n      ,[LogStatus]\n      ,[LogRecordCount]\n      ,[LogStartDt]\n      ,[LogEndDt]\n      ,[AdfPipelineRunId]\n  FROM [EnergyDashboard].[MdSourceLogDetail]\nWHERE 1=1\n\tAND LogStatus = 'Initialised'\nORDER BY [IdLogDetail]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "NB_DEV_DW_Datasets",
+						"type": "DatasetReference",
+						"parameters": {
+							"SchemaName": "EnergyDashboard",
+							"TableName": "MdSourceLogDetail"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Initialise Extractions",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[EnergyDashboard].[uspMdInitSourceLogDetail]",
+					"storedProcedureParameters": {
+						"AdfPipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"LogEventDateFrom": {
+							"value": {
+								"value": "@pipeline().parameters.LogEventDateFrom",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"LogEventDateTo": {
+							"value": {
+								"value": "@pipeline().parameters.LogEventDateTo",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"LogExtractionTimestamp": {
+							"value": {
+								"value": "@formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"LogType": {
+							"value": {
+								"value": "@pipeline().parameters.LogType",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Source": {
+							"value": {
+								"value": "@pipeline().parameters.Source",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "NB_DEVDW",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ForEachExtraction",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupExtractions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupExtractions').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "uspMdUpdateSourceLogDetail",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "S",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": null,
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "R",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Copy data",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "uspMdUpdateSourceLogDetail",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "CosmosDbSqlApiSource",
+									"query": {
+										"value": "@item().LogQuery",
+										"type": "Expression"
+									},
+									"preferredRegions": [],
+									"detectDatetime": true
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('TRUNCATE TABLE energyDashboard.',item().LogTargetTableName)}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "NB_CosmosDB_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"CollectionName": {
+											"value": "@item().LogStepName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "NB_DEV_DW_Datasets",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": "EnergyDashboard",
+										"TableName": {
+											"value": "@item().LogTargetTableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "uspMdUpdateSourceLogDetail_End_Succcess",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "S",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": {
+											"value": "@activity('Copy Data').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "S",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "uspMdUpdateSourceLogDetail_End_Failure",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[EnergyDashboard].[uspMdUpdateSourceLogDetail]",
+								"storedProcedureParameters": {
+									"IdLogDetail": {
+										"value": {
+											"value": "@item().IdLogDetail",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"Layer": {
+										"value": "S",
+										"type": "String"
+									},
+									"RecordCount": {
+										"value": null,
+										"type": "Int32"
+									},
+									"Status": {
+										"value": "X",
+										"type": "String"
+									},
+									"LogMessage": {
+										"value": {
+											"value": "@activity('Copy data').error.message",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "NB_DEVDW",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Source": {
+				"type": "string",
+				"defaultValue": "CosmosDB"
+			},
+			"LogType": {
+				"type": "string",
+				"defaultValue": "LogDate"
+			},
+			"LogEventDateFrom": {
+				"type": "string"
+			},
+			"LogEventDateTo": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DEV"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-04-14T13:27:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
