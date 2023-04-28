@@ -424,128 +424,6 @@
 								"parameters": {}
 							}
 						]
-					},
-					{
-						"name": "Copy data1",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false,
-								"disableMetricsCollection": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"name": "movies",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "movies",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "Title",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Title",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "genresgenregenre",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "genresgenregenre",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "YEAR",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "YEAR",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "Rating",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Rating",
-											"type": "String",
-											"physicalType": "String"
-										}
-									}
-								],
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "SourceDataset_fdi",
-								"type": "DatasetReference",
-								"parameters": {
-									"PathFile": "moviesDB2.csv"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "AzureSqlTable1",
-								"type": "DatasetReference",
-								"parameters": {
-									"TableName": "TesteRF",
-									"Schema": "dbo"
-								}
-							}
-						]
 					}
 				],
 				"policy": {
@@ -553,13 +431,11 @@
 					"cancelAfter": {}
 				},
 				"annotations": [],
-				"lastPublishTime": "2023-01-19T17:03:28Z"
+				"lastPublishTime": "2023-04-28T08:09:34Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SourceDataset_oit')]",
-				"[concat(variables('factoryId'), '/datasets/DestinationDataset_oit')]",
-				"[concat(variables('factoryId'), '/datasets/SourceDataset_fdi')]",
-				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]"
+				"[concat(variables('factoryId'), '/datasets/DestinationDataset_oit')]"
 			]
 		},
 		{
